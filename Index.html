@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #chat-messages {
+            scroll-behavior: smooth;
+        }
+        .chat-bubble {
+            max-width: 70%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col h-screen">
+
+    <!-- Login View -->
+    <div id="login-view" class="flex items-center justify-center h-full">
+        <div class="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm mx-4">
+            <h1 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Welcome to ChatApp</h1>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">Sign in to start chatting with others in real-time.</p>
+            <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition duration-300 ease-in-out transform hover:scale-105">
+                <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,36.502,44,30.832,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                Sign In with Google
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat View -->
+    <div id="chat-view" class="hidden flex flex-col h-full">
+        <!-- Header -->
+        <header class="flex-shrink-0 bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400">Firebase Chat</h1>
+            <div class="flex items-center">
+                 <p id="user-id-display" class="text-xs text-gray-500 mr-4"></p>
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Messages -->
+        <main id="chat-messages" class="flex-1 p-4 overflow-y-auto">
+            <!-- Messages will be injected here -->
+        </main>
+
+        <!-- Message Input -->
+        <footer class="flex-shrink-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <form id="message-form" class="flex items-center space-x-3">
+                <input id="message-input" type="text" placeholder="Type your message..." autocomplete="off" class="flex-1 w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full transition duration-300 ease-in-out">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+            </form>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            onSnapshot,
+            query,
+            serverTimestamp,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEB1SYqHpdDUNk9OcYq8T0AheqJUWtq3Y",
+            authDomain: "chat-7fa4a.firebaseapp.com",
+            projectId: "chat-7fa4a",
+            storageBucket: "chat-7fa4a.firebasestorage.app",
+            messagingSenderId: "991368259289",
+            appId: "1:991368259289:web:f226e7f7b491bd6b1800c8",
+            measurementId: "G-12HQ3WDSVN"
+        };
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-chat-app';
+
+        // --- Initialize Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        setLogLevel('debug');
+
+        // --- DOM Elements ---
+        const loginView = document.getElementById('login-view');
+        const chatView = document.getElementById('chat-view');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const userIdDisplay = document.getElementById('user-id-display');
+
+        // --- Authentication ---
+        const provider = new GoogleAuthProvider();
+
+        loginBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .catch((error) => console.error("Authentication Error:", error));
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth)
+                .catch((error) => console.error("Sign Out Error:", error));
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                loginView.classList.add('hidden');
+                chatView.classList.remove('hidden');
+                chatView.classList.add('flex');
+                userIdDisplay.textContent = `User ID: ${user.uid}`;
+                listenForMessages();
+            } else {
+                // User is signed out
+                loginView.classList.remove('hidden');
+                chatView.classList.add('hidden');
+                chatView.classList.remove('flex');
+                userIdDisplay.textContent = '';
+                chatMessages.innerHTML = ''; // Clear messages on logout
+            }
+        });
+
+        // --- Firestore ---
+        const messagesCollection = collection(db, `artifacts/${appId}/public/data/messages`);
+        
+        // --- Send Messages ---
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = messageInput.value.trim();
+            const user = auth.currentUser;
+
+            if (messageText !== '' && user) {
+                try {
+                    await addDoc(messagesCollection, {
+                        text: messageText,
+                        timestamp: serverTimestamp(),
+                        uid: user.uid,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL,
+                    });
+                    messageInput.value = '';
+                    scrollToBottom();
+                } catch (error) {
+                    console.error("Error sending message:", error);
+                }
+            }
+        });
+
+        // --- Listen for Messages ---
+        let unsubscribe = null;
+        function listenForMessages() {
+            // Unsubscribe from previous listener if it exists
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            
+            const q = query(messagesCollection);
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const messages = [];
+                snapshot.forEach((doc) => {
+                    messages.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort messages by timestamp client-side
+                messages.sort((a, b) => {
+                    const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                    const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                    return timeA - timeB;
+                });
+                
+                renderMessages(messages);
+                scrollToBottom();
+            }, (error) => {
+                 console.error("Error fetching messages:", error);
+            });
+        }
+        
+        // --- Render Messages ---
+        function renderMessages(messages) {
+            chatMessages.innerHTML = '';
+            const currentUser = auth.currentUser;
+
+            messages.forEach(msg => {
+                const isCurrentUser = currentUser && msg.uid === currentUser.uid;
+
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `flex items-start gap-3 my-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`;
+
+                const profilePic = document.createElement('img');
+                profilePic.src = msg.photoURL || 'https://placehold.co/40x40/E2E8F0/A0AEC0?text=U';
+                profilePic.alt = 'Avatar';
+                profilePic.className = 'w-10 h-10 rounded-full';
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'flex flex-col';
+
+                const displayName = document.createElement('span');
+                displayName.textContent = msg.displayName || 'Anonymous';
+                displayName.className = `text-sm font-semibold text-gray-700 dark:text-gray-300 ${isCurrentUser ? 'text-right' : 'text-left'}`;
+                
+                const bubble = document.createElement('div');
+                bubble.textContent = msg.text;
+                bubble.className = `chat-bubble p-3 rounded-2xl ${isCurrentUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`;
+                
+                messageContent.appendChild(displayName);
+                messageContent.appendChild(bubble);
+
+                if (isCurrentUser) {
+                    messageWrapper.appendChild(messageContent);
+                    messageWrapper.appendChild(profilePic);
+                } else {
+                    messageWrapper.appendChild(profilePic);
+                    messageWrapper.appendChild(messageContent);
+                }
+                
+                chatMessages.appendChild(messageWrapper);
+            });
+        }
+
+        // --- Utility Functions ---
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
+
