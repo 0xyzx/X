@@ -17,15 +17,39 @@
 <body class="bg-gray-100 flex flex-col h-screen">
 
     <div id="auth-screen" class="flex items-center justify-center h-full">
-        <div class="text-center p-8 bg-white rounded-lg shadow-md">
-            <h1 class="text-2xl font-bold mb-4">Welcome to Chat</h1>
-            <p class="text-gray-600 mb-6">Sign in to start messaging.</p>
-            <button id="sign-in-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center w-full">
-                <svg class="w-6 h-6 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.222 0-9.618-3.229-11.334-7.962l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.048 36.372 44 30.857 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
-                Sign In with Google
-            </button>
+        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+            
+            <!-- Login Form -->
+            <form id="login-form">
+                <h2 class="text-2xl font-bold text-center">Welcome Back!</h2>
+                <p class="text-center text-gray-500">Sign in to continue</p>
+                <div class="mt-4 space-y-4">
+                    <input id="login-email" type="email" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Email Address">
+                    <input id="login-password" type="password" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Password">
+                </div>
+                <button type="submit" class="w-full px-4 py-2 mt-6 font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-600">Sign In</button>
+                <p class="mt-4 text-sm text-center text-gray-600">
+                    Don't have an account? <a href="#" id="show-register" class="font-medium text-blue-500 hover:underline">Sign Up</a>
+                </p>
+            </form>
+
+            <!-- Registration Form -->
+            <form id="register-form" class="hidden">
+                <h2 class="text-2xl font-bold text-center">Create Account</h2>
+                 <p class="text-center text-gray-500">Get started with a new account</p>
+                <div class="mt-4 space-y-4">
+                    <input id="register-name" type="text" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Display Name">
+                    <input id="register-email" type="email" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Email Address">
+                    <input id="register-password" type="password" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Password">
+                </div>
+                <button type="submit" class="w-full px-4 py-2 mt-6 font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-600">Sign Up</button>
+                <p class="mt-4 text-sm text-center text-gray-600">
+                    Already have an account? <a href="#" id="show-login" class="font-medium text-blue-500 hover:underline">Sign In</a>
+                </p>
+            </form>
+            
             <!-- Error message will be displayed here -->
-            <div id="error-message" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm" style="display: none;"></div>
+            <div id="error-message" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-center" style="display: none;"></div>
         </div>
     </div>
 
@@ -33,7 +57,7 @@
         <header class="bg-white shadow-md p-4 flex justify-between items-center">
             <h1 class="text-xl font-bold">Chat Room</h1>
             <div class="flex items-center">
-                <img id="user-photo" class="w-8 h-8 rounded-full mr-2" src="" alt="User Photo">
+                <img id="user-photo" class="w-8 h-8 rounded-full mr-2 bg-gray-300" src="" alt="User Photo">
                 <span id="user-name" class="text-sm font-medium"></span>
                 <button id="sign-out-btn" class="ml-4 text-sm text-gray-600 hover:text-blue-500">Sign Out</button>
             </div>
@@ -56,7 +80,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // Your web app's Firebase configuration
@@ -78,7 +102,11 @@
         // DOM Elements
         const authScreen = document.getElementById('auth-screen');
         const chatScreen = document.getElementById('chat-screen');
-        const signInBtn = document.getElementById('sign-in-btn');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
+        
         const signOutBtn = document.getElementById('sign-out-btn');
         const userPhoto = document.getElementById('user-photo');
         const userName = document.getElementById('user-name');
@@ -90,64 +118,75 @@
         const appId = 'chat-app'; // A unique ID for your app artifact
         const messagesRef = collection(db, `artifacts/${appId}/public/data/messages`);
 
-        // Sign in function
-        const signIn = () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .catch((error) => {
-                    // Log detailed error to the console for debugging
-                    console.error("Google Sign-In Error:", {
-                        code: error.code,
-                        message: error.message,
-                        email: error.customData?.email,
+        // --- Authentication Logic ---
+
+        // Toggle between login and register forms
+        showRegister.onclick = (e) => { e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); errorMessageDiv.style.display = 'none'; };
+        showLogin.onclick = (e) => { e.preventDefault(); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); errorMessageDiv.style.display = 'none'; };
+
+        // Handle Registration
+        registerForm.onsubmit = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Create a placeholder avatar URL
+                    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+                    // Update user profile with display name and photo
+                    return updateProfile(userCredential.user, {
+                        displayName: name,
+                        photoURL: avatarUrl
                     });
-
-                    // Display a user-friendly error on the screen
-                    let friendlyMessage = "An unknown error occurred. Please check the console for details.";
-                    if (error.code === 'auth/popup-blocked') {
-                        friendlyMessage = "Sign-in popup was blocked by your browser. Please allow popups for this site and try again.";
-                    } else if (error.code === 'auth/unauthorized-domain') {
-                        friendlyMessage = "This website's domain is not authorized for sign-in. Please check your Firebase project's settings.";
-                    } else if (error.code === 'auth/cancelled-popup-request') {
-                        friendlyMessage = "The sign-in window was closed before completion. Please try again."
-                    }
-                    errorMessageDiv.textContent = `Sign-in failed: ${friendlyMessage}`;
-                    errorMessageDiv.style.display = 'block';
-                });
+                })
+                .catch(handleAuthError);
         };
 
-        // Sign out function
-        const doSignOut = () => {
-            signOut(auth);
+        // Handle Login
+        loginForm.onsubmit = (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            signInWithEmailAndPassword(auth, email, password).catch(handleAuthError);
+        };
+        
+        // Handle Sign Out
+        signOutBtn.onclick = () => signOut(auth);
+
+        // Display user-friendly error messages
+        const handleAuthError = (error) => {
+             let message = "An unknown error occurred.";
+             switch (error.code) {
+                case 'auth/invalid-email': message = 'Please enter a valid email address.'; break;
+                case 'auth/user-not-found': message = 'No account found with this email.'; break;
+                case 'auth/wrong-password': message = 'Incorrect password. Please try again.'; break;
+                case 'auth/email-already-in-use': message = 'This email is already registered.'; break;
+                case 'auth/weak-password': message = 'Password should be at least 6 characters.'; break;
+             }
+             errorMessageDiv.textContent = message;
+             errorMessageDiv.style.display = 'block';
         };
 
-        signInBtn.onclick = signIn;
-        signOutBtn.onclick = doSignOut;
+        // --- Real-time Chat Logic ---
 
         // Auth state listener
         onAuthStateChanged(auth, user => {
-            errorMessageDiv.style.display = 'none'; // Hide error on auth state change
+            errorMessageDiv.style.display = 'none';
             if (user) {
-                // User is signed in
                 authScreen.classList.add('hidden');
                 chatScreen.classList.remove('hidden');
-                userPhoto.src = user.photoURL;
-                userName.textContent = user.displayName;
+                userPhoto.src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=random&color=fff`;
+                userName.textContent = user.displayName || user.email;
                 
-                // Listen for new messages
                 const q = query(messagesRef, orderBy("timestamp"));
-                onSnapshot(q, (querySnapshot) => {
+                onSnapshot(q, (snapshot) => {
                     messagesContainer.innerHTML = '';
-                    querySnapshot.forEach((doc) => {
-                        const message = doc.data();
-                        renderMessage(message, user.uid);
-                    });
-                     // Scroll to the bottom
+                    snapshot.forEach(doc => renderMessage(doc.data(), user.uid));
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 });
-
             } else {
-                // User is signed out
                 authScreen.classList.remove('hidden');
                 chatScreen.classList.add('hidden');
             }
@@ -162,16 +201,16 @@
                 addDoc(messagesRef, {
                     text: text,
                     timestamp: serverTimestamp(),
-                    uid: uid,
-                    displayName: displayName,
-                    photoURL: photoURL
+                    uid,
+                    displayName,
+                    photoURL
                 });
                 messageInput.value = '';
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
         };
 
-        // Render a message in the chat
+        // Render a message
         const renderMessage = (msg, currentUid) => {
             const isCurrentUser = msg.uid === currentUid;
             const bubbleSide = isCurrentUser ? 'justify-end' : 'justify-start';
@@ -179,12 +218,16 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex ${bubbleSide} mb-4`;
             
+            const avatar = `<img src="${msg.photoURL}" alt="${msg.displayName}" class="w-6 h-6 rounded-full ${isCurrentUser ? 'ml-2 order-2' : 'mr-2 order-1'}">`;
+            
             messageDiv.innerHTML = `
                 <div class="flex items-end max-w-lg">
-                    ${!isCurrentUser ? `<img src="${msg.photoURL}" alt="${msg.displayName}" class="w-6 h-6 rounded-full mr-2">` : ''}
-                    <div class="p-3 rounded-lg ${bubbleColor} chat-bubble">
+                    ${!isCurrentUser ? avatar : ''}
+                    <div class="p-3 rounded-lg ${bubbleColor} chat-bubble ${isCurrentUser ? 'order-1' : 'order-2'}">
+                        ${!isCurrentUser ? `<p class="text-xs font-bold mb-1">${msg.displayName}</p>` : ''}
                         <p class="text-sm">${msg.text}</p>
                     </div>
+                    ${isCurrentUser ? avatar : ''}
                 </div>
             `;
             messagesContainer.appendChild(messageDiv);
